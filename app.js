@@ -1,7 +1,14 @@
+/**
+ * The Basic implementation of the NodeJS code!
+ */
+require('dotenv').config();
+
 const express = require('express');
 const bodyParser = require('body-parser');
 
 const feedRoutes = require('./routes/feed');
+
+const { MONGODB_URI } = process.env;
 
 const app = express();
 
