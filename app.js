@@ -5,10 +5,11 @@ require('dotenv').config();
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 const feedRoutes = require('./routes/feed');
 
-const { MONGODB_URI } = process.env;
+const { MONGODB_URI, SERVICE_PORT } = process.env;
 
 const app = express();
 
@@ -24,4 +25,12 @@ app.use((req, res, next) => {
 //GET /feed/posts
 app.use('/feed', feedRoutes);
 
-app.listen(8080);
+mongoose.connect(MONGODB_URI)
+    .then(result => {
+        console.log("Application", "DB Connected");
+        app.listen(SERVICE_PORT);
+    })
+    .catch(error => {
+        console.log("Application", "DB Init Error", error);
+    });
+

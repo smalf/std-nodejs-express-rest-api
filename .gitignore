@@ -1,1 +1,12 @@
 node_modules
+.env
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.idea/compiler.xml
+.idea/copyright/profiles_settings.xml
+app/events.json
+.cxx/**

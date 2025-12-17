@@ -13,7 +13,7 @@ router.post(
     body('title',
         'Title should include at list 5 characters.')
         .trim()
-        .isLength({ min: 10 })
+        .isLength({ min: 5 })
     ,
     body('content',
         'Content should include at list 5 characters.')
