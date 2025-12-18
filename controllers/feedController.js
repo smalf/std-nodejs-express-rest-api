@@ -218,6 +218,13 @@ module.exports.deletePost = (req, res, next) => {
             return post.deleteOne();
         })
         .then(result => {
+            return User.findById(req.userId);
+        })
+        .then(user => {
+            user.posts.pull(postId);
+            return user.save();
+        })
+        .then(result => {
             res.set('Content-Type', 'application/json');
             res.status(200).json({
                 message: `Post ${postId} is succesfully Deleted.`
