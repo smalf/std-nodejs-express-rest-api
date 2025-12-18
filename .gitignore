@@ -1,4 +1,4 @@
-node_modules
+/node_modules
 .env
 .DS_Store
 ._*
@@ -10,3 +10,4 @@ Thumbs.db
 .idea/copyright/profiles_settings.xml
 app/events.json
 .cxx/**
+/images
