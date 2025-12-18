@@ -168,3 +168,34 @@ module.exports.updatePost = (req, res, next) => {
             next(err);
         })
 }
+
+module.exports.deletePost = (req, res, next) => {
+    const postId = req.params.postId;
+
+    Post.findById(postId)
+        .then(post => {
+            if (!post) {
+                const error = new Error('Post with such an Id doe not esists.');
+                error.statusCode = 404;
+                throw error;
+            }
+
+            clearImage(post.imageUrl);
+            return post.deleteOne();
+        })
+        .then(result => {
+            res.set('Content-Type', 'application/json');
+            res.status(200).json({
+                message: `Post ${postId} is succesfully Deleted.`
+            });
+        })
+        .catch(err => {
+            console.log('feedController', 'deletePost', 'ERROR: ' + err);
+
+            if (!err.statusCode) {
+                err.statusCode = 500;
+            }
+            //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
+            next(err);
+        })
+}
