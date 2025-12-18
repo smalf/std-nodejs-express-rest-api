@@ -14,6 +14,7 @@ router.get('/posts', isAuth, feedController.getPosts);
 // POST /feed/post
 router.post(
     '/post',
+    isAuth, 
     [
         body('title',
             'Title should include at list 5 characters.')
@@ -28,11 +29,12 @@ router.post(
     feedController.createPost);
 
 // GET /feed/post
-router.get('/post/:postId', feedController.getPost);
+router.get('/post/:postId', isAuth, feedController.getPost);
 
 // PUT /feed/post
 router.put(
     '/post/:postId',
+    isAuth, 
     [
         body('title',
             'Title should include at list 5 characters.')
@@ -47,6 +49,6 @@ router.put(
     feedController.updatePost);
 
 // DELETE /feed/post
-router.delete('/post/:postId', feedController.deletePost);
+router.delete('/post/:postId', isAuth, feedController.deletePost);
 
 module.exports = router;
