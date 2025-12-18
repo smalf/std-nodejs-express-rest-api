@@ -12,20 +12,37 @@ router.get('/posts', feedController.getPosts);
 
 // POST /feed/post
 router.post(
-    '/post', [
-    body('title',
-        'Title should include at list 5 characters.')
-        .trim()
-        .isLength({ min: 5 })
-    ,
-    body('content',
-        'Content should include at list 5 characters.')
-        .trim()
-        .isLength({ min: 5 })
-],
+    '/post',
+    [
+        body('title',
+            'Title should include at list 5 characters.')
+            .trim()
+            .isLength({ min: 5 })
+        ,
+        body('content',
+            'Content should include at list 5 characters.')
+            .trim()
+            .isLength({ min: 5 })
+    ],
     feedController.createPost);
 
-//GET /feed/post
+// GET /feed/post
 router.get('/post/:postId', feedController.getPost);
+
+// PUT /feed/post
+router.put(
+    '/post/:postId',
+    [
+        body('title',
+            'Title should include at list 5 characters.')
+            .trim()
+            .isLength({ min: 5 })
+        ,
+        body('content',
+            'Content should include at list 5 characters.')
+            .trim()
+            .isLength({ min: 5 })
+    ],
+    feedController.updatePost);
 
 module.exports = router;
