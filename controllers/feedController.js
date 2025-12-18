@@ -1,7 +1,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const Post = require('../models/post')
+const Post = require('../models/post');
+const User = require('../models/user');
 const { validationResult } = require('express-validator');
 
 const clearImage = filePath => {
@@ -56,28 +57,38 @@ module.exports.createPost = (req, res, next) => {
         throw error;
     }
 
+    const userId = req.userId;
+
     const imageUrl = req.file.path;
     const title = req.body.title;
     const content = req.body.content;
+    let creator;
 
     const post = new Post({
         title: title,
         content: content,
         imageUrl: imageUrl,
-        creator: {
-            name: 'Serhii M.'
-        },
+        creator: req.userId,
     });
     post.save()
         .then(result => {
             console.log('feedController', 'createPost', 'RESULT: ' + result);
+            return User.findById(userId);
+        })
+        .then(user => {
+            creator = user;
+            user.posts.push(post);
+            return user.save();
+        })
+        .then(result => {
 
             //Create post in DB.
             //STAUTS 201 means resource was succesfully created.
             res.set('Content-Type', 'application/json');
             res.status(201).json({
                 message: 'Post created successfully!',
-                post: result
+                post: post,
+                creator: { _id: creator._id, name: creator.name }
             });
         })
         .catch(err => {
