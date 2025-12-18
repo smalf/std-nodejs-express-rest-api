@@ -37,24 +37,7 @@ module.exports.getPosts = (req, res, next) => {
             }
             //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
             next(err);
-        })
-    // Post.find()
-    //     .then(posts => {
-    //         res.set('Content-Type', 'application/json');
-    //         res.status(200).json({
-    //             message: 'Fetchede posts succesfully',
-    //             posts: posts
-    //         });
-    //     })
-    //     .catch(err => {
-    //         console.log('feedController', 'getPosts', 'ERROR: ' + err);
-
-    //         if (!err.statusCode) {
-    //             err.statusCode = 500;
-    //         }
-    //         //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
-    //         next(err);
-    //     });
+        });
 }
 
 module.exports.createPost = (req, res, next) => {

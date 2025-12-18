@@ -10,6 +10,7 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 
 const feedRoutes = require('./routes/feed');
+const authRoutes = require('./routes/auth');
 
 const { MONGODB_URI, SERVICE_PORT } = process.env;
 
@@ -46,8 +47,10 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type', 'Authorization');
     next();
 });
-//GET /feed/posts
+// /feed/..
 app.use('/feed', feedRoutes);
+// /auth/..
+app.use('/auth', authRoutes);
 
 /**
  * The Middleware for handling global errors!
