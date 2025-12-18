@@ -1,12 +1,66 @@
 const User = require('../models/user');
 const bcript = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const { validationResult } = require('express-validator');
 
+const { JWT_SECRET, JWT_EXPIRATION_TYME } = process.env;
+
+module.exports.login = (req, res, next) => {
+    const email = req.body.email;
+    const password = req.body.password;
+
+    let loggedUser
+    User.findOne({ email: email })
+        .then(user => {
+            if (!user) {
+                const error = new Error('User with such an email doesn\'t exists.');
+                error.statusCode = 401;
+                throw error;
+            }
+
+            loggedUser = user;
+            return bcript.compare(password, loggedUser.password)
+        })
+        .then(doMatch => {
+            if (!doMatch) {
+                const error = new Error('Wrong password or email!');
+                error.statusCode = 401;
+                throw error;
+            }
+
+            const token = jwt.sign(
+                {
+                    email: loggedUser.email,
+                    userId: loggedUser._id.toString()
+                },
+                JWT_SECRET,
+                { expiresIn: '1h' }
+            );
+            res.status(200).json({
+                token: token,
+                userId: loggedUser._id
+            })
+        })
+        .catch(err => {
+            console.log('authController', 'login', 'ERROR: ' + err);
+
+            if (!err.statusCode) {
+                err.statusCode = 500;
+            }
+            //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
+            next(err);
+        });
+}
+
 module.exports.putSignup = (req, res, next) => {
     const errors = validationResult(req);
+    const email = req.body.email;
+    const name = req.body.name;
+    const password = req.body.password;
 
     if (!errors.isEmpty()) {
+        console.log('authController', 'putSignup', `DATA: [ email: ${email}, name: ${name}] `);
         console.log('authController', 'putSignup', 'VALIDATION_ERROR: ' + errors.array()[0].msg);
 
         const error = new Error('Validation failed. Entered data is incorrect.');
@@ -14,9 +68,7 @@ module.exports.putSignup = (req, res, next) => {
         throw error;
     }
 
-    const email = req.body.email;
-    const name = req.body.name;
-    const password = req.body.password;
+
 
     bcript.hash(password, 12)
         .then(encryptedPwd => {
@@ -31,7 +83,7 @@ module.exports.putSignup = (req, res, next) => {
         .then(result => {
             res.set('Content-Type', 'application/json');
             res.status(201).json({
-                message: 'User created!', 
+                message: 'User created!',
                 userId: result._id
             });
         })
