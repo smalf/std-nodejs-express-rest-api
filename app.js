@@ -11,6 +11,7 @@ const multer = require('multer');
 
 const feedRoutes = require('./routes/feed');
 const authRoutes = require('./routes/auth');
+const accRoutes = require('./routes/status');
 
 const { MONGODB_URI, SERVICE_PORT } = process.env;
 
@@ -51,6 +52,8 @@ app.use((req, res, next) => {
 app.use('/feed', feedRoutes);
 // /auth/..
 app.use('/auth', authRoutes);
+// /account/..
+app.use('/account', accRoutes);
 
 /**
  * The Middleware for handling global errors!
