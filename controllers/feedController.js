@@ -10,35 +10,30 @@ const clearImage = filePath => {
     fs.unlink(filePath, err => console.log(err));
 };
 
-module.exports.getPosts = (req, res, next) => {
+module.exports.getPosts = async (req, res, next) => {
     const currentPage = req.query.page || 1;
     const perPage = 2;
-    let totalItems;
-    Post.find().countDocuments()
-        .then(count => {
-            totalItems = count;
-            //Pagination!
-            return Post.find()
-                .skip((currentPage - 1) * perPage)
-                .limit(perPage);
-        })
-        .then(posts => {
-            res.set('Content-Type', 'application/json');
-            res.status(200).json({
-                message: 'Fetchede posts succesfully',
-                posts: posts,
-                totalItems: totalItems
-            });
-        })
-        .catch(err => {
-            console.log('feedController', 'getPosts', 'ERROR: ' + err);
+    try {
+        const totalItems = await Post.find().countDocuments();
+        const posts = await Post.find()
+            .skip((currentPage - 1) * perPage)
+            .limit(perPage);
 
-            if (!err.statusCode) {
-                err.statusCode = 500;
-            }
-            //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
-            next(err);
+        res.set('Content-Type', 'application/json');
+        res.status(200).json({
+            message: 'Fetchede posts succesfully',
+            posts: posts,
+            totalItems: totalItems
         });
+    } catch (err) {
+        console.log('feedController', 'getPosts', 'ERROR: ' + err);
+
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
+        next(err);
+    }
 }
 
 module.exports.createPost = (req, res, next) => {

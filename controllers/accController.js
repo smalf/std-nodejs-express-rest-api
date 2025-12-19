@@ -1,34 +1,33 @@
 const User = require('../models/user');
 const { validationResult } = require('express-validator');
 
-exports.getStatus = (req, res, next) => {
+exports.getStatus = async (req, res, next) => {
     const userId = req.userId;
 
-    User.findById(userId)
-        .then(user => {
-            if (!user) {
-                const error = new Error('Not authorized.');
-                error.statusCode = 403;
-                throw error;
-            }
-
-            res.status(200).json({
-                message: 'Status succesfully retrieved.',
-                status: user.status
-            });
-        })
-        .catch(err => {
-            console.log('statusController', 'getStatus', 'ERROR: ' + err);
-
-            if (!err.statusCode) {
-                err.statusCode = 500;
-            }
-            //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
-            next(err);
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            const error = new Error('Not authorized.');
+            error.statusCode = 403;
+            throw error;
+        }
+        res.status(200).json({
+            message: 'Status succesfully retrieved.',
+            status: user.status
         });
+    } catch (err) {
+        console.log('statusController', 'getStatus', 'ERROR: ' + err);
+
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
+        next(err);
+    }
+
 }
 
-exports.updateStatus = (req, res, next) => {
+exports.updateStatus = async (req, res, next) => {
     const errors = validationResult(req);
     const status = req.body.status;
     const userId = req.userId;
@@ -40,34 +39,29 @@ exports.updateStatus = (req, res, next) => {
         throw error;
     }
 
-    let loggedUser;
+    try {
+        const loggedUser = await User.findById(userId);
+        if (!loggedUser) {
+            const error = new Error('Not authorized.');
+            error.statusCode = 403;
+            throw error;
+        }
 
-    User.findById(userId)
-        .then(user => {
-            if (!user) {
-                const error = new Error('Not authorized.');
-                error.statusCode = 403;
-                throw error;
-            }
+        loggedUser.status = status;
+        await loggedUser.save();
 
-            loggedUser = user;
-            loggedUser.status = status;
-            return loggedUser.save();
-
-        })
-        .then(result => {
-            res.status(200).json({
-                message: 'Status succefully updated',
-                status: loggedUser.status
-            });
-        })
-        .catch(err => {
-            console.log('statusController', 'updateStatus', 'ERROR: ' + err);
-
-            if (!err.statusCode) {
-                err.statusCode = 500;
-            }
-            //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
-            next(err);
+        res.status(200).json({
+            message: 'Status succefully updated',
+            status: loggedUser.status
         });
+
+    } catch (err) {
+
+        console.log('statusController', 'updateStatus', 'ERROR: ' + err);
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
+        next(err);
+    }
 }
