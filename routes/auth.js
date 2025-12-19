@@ -25,9 +25,9 @@ router.put(
         body('password',
             'Please enter a password with only numbers and text and at list 5 characters.'
         )
+            .trim()
             .isLength({ min: 5 })
-            .isAlphanumeric()
-            .trim(),
+            .isAlphanumeric(),
         body('name',
             'Name should not be empty.')
             .trim()
