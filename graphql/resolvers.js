@@ -2,6 +2,9 @@ const User = require('../models/user');
 const bcrypt = require('bcryptjs');
 const validator = require('validator');
 
+const jwt = require('jsonwebtoken');
+const { JWT_SECRET, JWT_EXPIRATION_TYME } = process.env;
+
 module.exports = {
     createUser: async function ({ userInput }, req) {
         const errors = [];
@@ -47,5 +50,42 @@ module.exports = {
             ...createdUser._doc, _id: createdUser._id.toString()
         };
 
+    },
+    login: async function ({ email, password }, req) {
+        const loggedUser = await User.findOne({ email: email });
+        if (!loggedUser) {
+            const error = new Error('User with such an email doesn\'t exist.');
+            error.code = 401;
+            throw error;
+        }
+
+        try {
+            const doMatch = await bcrypt.compare(password, loggedUser.password);
+            if (!doMatch) {
+                const error = new Error('Wrong password or email!');
+                error.code = 401;
+                throw error;
+            }
+            const token = jwt.sign(
+                {
+                    email: loggedUser.email,
+                    userId: loggedUser._id.toString()
+                },
+                JWT_SECRET,
+                { expiresIn: '1h' }
+            );
+            return {
+                token: token,
+                userId: loggedUser._id.toString()
+            }
+        } catch (err) {
+            console.log('login', 'ERROR: ' + err);
+
+            if (!err.code) {
+                err.code = 500;
+            }
+            //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
+            throw err;
+        }
     }
 };
