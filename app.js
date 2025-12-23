@@ -9,9 +9,11 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const multer = require('multer');
 
-const feedRoutes = require('./routes/feed');
-const authRoutes = require('./routes/auth');
-const accRoutes = require('./routes/status');
+const { createHandler } = require('graphql-http/lib/use/express');
+const { ruruHTML } = require('ruru/server'); //GraphIQL IDE
+const graphqlSchema = require('./graphql/schema');
+const graphqlResolver = require('./graphql/resolvers');
+
 
 const { MONGODB_URI, SERVICE_PORT } = process.env;
 
@@ -48,12 +50,23 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     next();
 });
-// /feed/..
-app.use('/feed', feedRoutes);
-// /auth/..
-app.use('/auth', authRoutes);
-// /account/..
-app.use('/account', accRoutes);
+
+app.get('/graphql', (_req, res) => {
+  res.type('html');
+  res.end(ruruHTML({ endpoint: '/graphql' }));
+});
+
+app.post('/graphql', createHandler({
+    schema: graphqlSchema,
+    rootValue: graphqlResolver
+}));
+
+// // /feed/..
+// app.use('/feed', feedRoutes);
+// // /auth/..
+// app.use('/auth', authRoutes);
+// // /account/..
+// app.use('/account', accRoutes);
 
 /**
  * The Middleware for handling global errors!
@@ -72,12 +85,6 @@ mongoose.connect(MONGODB_URI)
     .then(result => {
         console.log("Application", "DB Connected");
         const apiServer = app.listen(SERVICE_PORT);
-
-        //Socket.io Integration
-        const io = require('socket.io')(apiServer);
-        io.on('connection', socket => {
-            console.log('Client connected');
-        });
     })
     .catch(error => {
         console.log("Application", "DB Init Error", error);
