@@ -34,7 +34,23 @@ const fileFilter = (req, file, callback) => {
     } else {
         callback(null, false);
     }
-}
+};
+
+const graphqlErrorFormatter = (error) => {
+    if (!error.originalError) {
+        return error;
+    }
+
+    const data = error.originalError.data;
+    const message = error.message || 'An error occured';
+    const code = error.originalError.code || 500;
+
+    return {
+        message: message,
+        status: code,
+        data: data
+    }
+};
 
 // app.use(bodyParser.urlencoded()) -> For Data if form of x-www-urlencoded. Basically for forms
 app.use(bodyParser.json()); // This for application/json
@@ -58,7 +74,8 @@ app.get('/graphql', (_req, res) => {
 
 app.post('/graphql', createHandler({
     schema: graphqlSchema,
-    rootValue: graphqlResolver
+    rootValue: graphqlResolver,
+    formatError: graphqlErrorFormatter,
 }));
 
 // // /feed/..

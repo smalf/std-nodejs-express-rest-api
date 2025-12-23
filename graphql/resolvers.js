@@ -18,10 +18,7 @@ module.exports = {
         const name = validator.trim(userInput.name);
         const password = validator.trim(userInput.password);
 
-        if (!validator.isAlphanumeric(password)) {
-            errors.push({ message: 'Please enter a password with only numbers and text and at list 5 characters.' });
-        }
-        if (!validator.isLength(password, { min: 5 })) {
+        if (!validator.isLength(password, { min: 5 }) || !validator.isAlphanumeric(password)) {
             errors.push({ message: 'Please enter a password with only numbers and text and at list 5 characters.' });
         }
         if (validator.isEmpty(name)) {
@@ -31,8 +28,9 @@ module.exports = {
         if (errors.length > 0) {
             // console.log('authController', 'putSignup', `DATA: [ email: ${email}, name: ${name}] `);
             // console.log('authController', 'putSignup', 'VALIDATION_ERROR: ' + errors.array()[0].msg);
-            const error = new Error('Validation failed. Entered data is incorrect. Error: ' + errors[0].message);
-            error.statusCode = 422;
+            const error = new Error('Validation failed. Entered data is incorrect.');
+            error.code = 422;
+            error.data = errors;
             throw error;
         }
 
