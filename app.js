@@ -71,7 +71,13 @@ app.use((error, req, res, next) => {
 mongoose.connect(MONGODB_URI)
     .then(result => {
         console.log("Application", "DB Connected");
-        app.listen(SERVICE_PORT);
+        const apiServer = app.listen(SERVICE_PORT);
+
+        //Socket.io Integration
+        const io = require('socket.io')(apiServer);
+        io.on('connection', socket => {
+            console.log('Client connected');
+        });
     })
     .catch(error => {
         console.log("Application", "DB Init Error", error);
