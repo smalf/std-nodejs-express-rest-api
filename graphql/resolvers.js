@@ -9,7 +9,7 @@ const Post = require('../models/post');
 
 
 module.exports = {
-    createUser: async function ({ userInput }, req) {
+    createUser: async function ({ userInput }, context) {
         const errors = [];
 
         if (!validator.isEmail(userInput.email)) {
@@ -54,7 +54,7 @@ module.exports = {
         };
 
     },
-    login: async function ({ email, password }, req) {
+    login: async function ({ email, password }, context) {
         const loggedUser = await User.findOne({ email: email });
         if (!loggedUser) {
             const error = new Error('User with such an email doesn\'t exist.');
@@ -154,6 +154,39 @@ module.exports = {
             }
         } catch (err) {
             console.log('createPost', 'ERROR: ' + err);
+
+            if (!err.code) {
+                err.code = 500;
+            }
+            //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
+            throw err;
+        }
+    },
+    getPosts: async function ({ currentPage, pageSize }, context) {
+        // const perPage = 5;
+        try {
+            const totalItems = await Post.find().countDocuments();
+            const posts = await Post.find()
+                .populate('creator')
+                .skip((currentPage - 1) * pageSize)
+                .limit(pageSize);
+
+
+            return {
+                totalItems: totalItems,
+                posts: posts.map(post => {
+                    return {
+                        ...post._doc,
+                        _id: post._id.toString(),
+                        createdAt: post.createdAt.toISOString(),
+                        updatedAt: post.createdAt.toISOString(),
+                    };
+                })
+            };
+
+
+        } catch (err) {
+            console.log('getPosts', 'ERROR: ' + err);
 
             if (!err.code) {
                 err.code = 500;
