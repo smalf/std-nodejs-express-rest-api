@@ -13,7 +13,7 @@ const { createHandler } = require('graphql-http/lib/use/express');
 const { ruruHTML } = require('ruru/server'); //GraphIQL IDE
 const graphqlSchema = require('./graphql/schema');
 const graphqlResolver = require('./graphql/resolvers');
-
+const authMiddlleware = require('./middleware/is-auth');
 
 const { MONGODB_URI, SERVICE_PORT } = process.env;
 
@@ -67,14 +67,21 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use(authMiddlleware);
+
 app.get('/graphql', (_req, res) => {
-  res.type('html');
-  res.end(ruruHTML({ endpoint: '/graphql' }));
+    res.type('html');
+    res.end(ruruHTML({ endpoint: '/graphql' }));
 });
 
 app.post('/graphql', createHandler({
     schema: graphqlSchema,
     rootValue: graphqlResolver,
+    context: (request) => {
+        // request.raw === Express req (with your req.isAuth set by middleware)
+        const req = request.raw;
+        return { req: req };
+    },
     formatError: graphqlErrorFormatter,
 }));
 

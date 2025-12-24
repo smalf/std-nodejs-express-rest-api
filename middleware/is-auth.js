@@ -2,26 +2,31 @@ const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = process.env;
 
 module.exports = (req, res, next) => {
+    console.log("is-auth", "middleware");
     const authHeader = req.get('Authorization');
     if (!authHeader) {
-        const error = new Error('Not Authenticated.');
-        error.statusCode = 401;
-        throw error;
+        console.log("is-auth", "middleware", "NO authHeader");
+        req.isAuth = false;
+        console.log("is-auth", "middleware", "Req.isAuth = " + req.isAuth);
+        return next();
     }
     const token = authHeader.split(' ')[1];
     let decodedToken;
     try {
         decodedToken = jwt.verify(token, JWT_SECRET);
     } catch (err) {
-        err.statusCode = 500;
-        throw err;
+        console.log("is-auth", "middleware", "Error whe JWT verify, err= " + err);
+        req.isAuth = false;
+        return next();
     }
     if (!decodedToken) {
-        const error = new Error('Not Authenticated.');
-        error.statusCode = 401;
-        throw error;
+        console.log("is-auth", "middleware", "Error No Decoded Token!");
+        req.isAuth = false;
+        return next();
     }
     
+    console.log("is-auth", "middleware", "All good write decoded Token. decodedToken = " + decodedToken);
     req.userId = decodedToken.userId;
+    req.isAuth = true;
     next();
 };

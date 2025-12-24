@@ -1,9 +1,12 @@
-const User = require('../models/user');
 const bcrypt = require('bcryptjs');
 const validator = require('validator');
 
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET, JWT_EXPIRATION_TYME } = process.env;
+
+const User = require('../models/user');
+const Post = require('../models/post');
+
 
 module.exports = {
     createUser: async function ({ userInput }, req) {
@@ -80,6 +83,77 @@ module.exports = {
             }
         } catch (err) {
             console.log('login', 'ERROR: ' + err);
+
+            if (!err.code) {
+                err.code = 500;
+            }
+            //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
+            throw err;
+        }
+    },
+    createPost: async function ({ postInput }, context) {
+        if (!context.req.isAuth) {
+            const error = new Error('Not authenticated!');
+            error.code = 401;
+            throw error;
+        }
+
+        const errors = [];
+
+        const title = validator.trim(postInput.title);
+        const content = validator.trim(postInput.content);
+        const imageUrl = postInput.imageUrl;
+
+        if (!validator.isLength(title, { min: 5 })) {
+            errors.push({ message: 'Title should include at list 5 characters.' });
+        }
+
+        if (!validator.isLength(content, { min: 5 })) {
+            errors.push({ message: 'Content should include at list 5 characters.' });
+        }
+
+        if (errors.length > 0) {
+            const error = new Error('New Post Validation failed. Entered data is incorrect.');
+            error.code = 422;
+            error.data = errors;
+            throw error;
+        }
+
+        const user = await User.findById(context.req.userId);
+        if (!user) {
+            const error = new Error('Invalid User.');
+            error.code = 401;
+            throw error;
+        }
+
+        try {
+
+            const post = new Post({
+                title: title,
+                content: content,
+                imageUrl: imageUrl,
+                creator: user,
+            });
+
+
+            const createdPost = await post.save();
+            console.log('createPost', 'RESULT: ' + createdPost);
+
+            // const creator = await User.findById(userId);
+            user.posts.push(post);
+
+            await user.save();
+            //Create post in DB.
+            //STAUTS 201 means resource was succesfully created.
+
+            return {
+                ...createdPost._doc,
+                _id: createdPost._id.toString(),
+                createdAt: createdPost.createdAt.toISOString(),
+                updatedAt: createdPost.createdAt.toISOString(),
+            }
+        } catch (err) {
+            console.log('createPost', 'ERROR: ' + err);
 
             if (!err.code) {
                 err.code = 500;
