@@ -345,5 +345,70 @@ module.exports = {
             //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
             throw err;
         }
+    },
+    getUser: async function (args, context) {
+        if (!context.req.isAuth) {
+            const error = new Error('Not authenticated!');
+            error.code = 401;
+            throw error;
+        }
+
+        try {
+            const user = await User.findById(context.req.userId).populate('posts');
+            return {
+                ...user._doc,
+                _id: user._id.toString()
+            };
+        } catch (err) {
+            console.log('getUser', 'ERROR: ' + err);
+
+            if (!err.code) {
+                err.code = 500;
+            }
+            //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
+            throw err;
+        }
+    },
+    updateUserStatus: async function ({ status }, context) {
+        if (!context.req.isAuth) {
+            const error = new Error('Not authenticated!');
+            error.code = 401;
+            throw error;
+        }
+
+        const errors = [];
+
+        const newStatus = validator.trim(status);
+
+        if (!validator.isLength(newStatus, { min: 5 })) {
+            errors.push({ message: 'Status should include at list 5 characters.' });
+        }
+
+        if (errors.length > 0) {
+            const error = new Error('New Status Validation failed. Entered data is incorrect.');
+            error.code = 422;
+            error.data = errors;
+            throw error;
+        }
+
+        try {
+            const user = await User.findById(context.req.userId);
+            user.status = newStatus;
+            await user.save();
+
+            return {
+                ...user._doc,
+                _id: user._id.toString()
+            };
+        } catch (err) {
+            console.log('updateUserStatus', 'ERROR: ' + err);
+
+            if (!err.code) {
+                err.code = 500;
+            }
+            //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
+            throw err;
+        }
+
     }
 };
