@@ -10,33 +10,6 @@ const clearImage = filePath => {
     fs.unlink(filePath, err => console.log(err));
 };
 
-module.exports.getPosts = async (req, res, next) => {
-    const currentPage = req.query.page || 1;
-    const perPage = 2;
-    try {
-        const totalItems = await Post.find().countDocuments();
-        const posts = await Post.find()
-            .populate('creator')
-            .skip((currentPage - 1) * perPage)
-            .limit(perPage);
-
-        res.set('Content-Type', 'application/json');
-        res.status(200).json({
-            message: 'Fetchede posts succesfully',
-            posts: posts,
-            totalItems: totalItems
-        });
-    } catch (err) {
-        console.log('feedController', 'getPosts', 'ERROR: ' + err);
-
-        if (!err.statusCode) {
-            err.statusCode = 500;
-        }
-        //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
-        next(err);
-    }
-}
-
 module.exports.createPost = async (req, res, next) => {
     const errors = validationResult(req);
 
