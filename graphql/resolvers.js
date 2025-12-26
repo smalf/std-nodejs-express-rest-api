@@ -7,6 +7,7 @@ const { JWT_SECRET, JWT_EXPIRATION_TYME } = process.env;
 const User = require('../models/user');
 const Post = require('../models/post');
 
+const { clearImage } = require('../middleware/fileUtils');
 
 module.exports = {
     createUser: async function ({ userInput }, context) {
@@ -229,5 +230,46 @@ module.exports = {
             throw err;
         }
 
+    },
+    deletePost: async function ({ postId }, context) {
+        if (!context.req.isAuth) {
+            const error = new Error('Not authenticated!');
+            error.code = 401;
+            throw error;
+        }
+
+        try {
+            const post = await Post.findById(postId);
+            if (!post) {
+                const error = new Error('Post with such an Id doe not esists.');
+                error.statusCode = 404;
+                throw error;
+            }
+
+            if (post.creator.toString() !== context.req.userId) {
+                const error = new Error('Not authorized.');
+                error.statusCode = 403;
+                throw error;
+            }
+
+            clearImage(post.imageUrl);
+            await post.deleteOne();
+
+            const user = await User.findById(context.req.userId);
+            user.posts.pull(postId);
+            await user.save();
+
+            return {
+                deletedPost: post._id.toString()
+            };
+        } catch (err) {
+            console.log('getPosts', 'ERROR: ' + err);
+
+            if (!err.code) {
+                err.code = 500;
+            }
+            //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
+            throw err;
+        }
     }
 };
