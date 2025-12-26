@@ -231,6 +231,80 @@ module.exports = {
         }
 
     },
+    updatePost: async function ({ postId, postInput }, context) {
+        if (!context.req.isAuth) {
+            const error = new Error('Not authenticated!');
+            error.code = 401;
+            throw error;
+        }
+
+        const errors = [];
+
+        const title = validator.trim(postInput.title);
+        const content = validator.trim(postInput.content);
+
+        if (!validator.isLength(title, { min: 5 })) {
+            errors.push({ message: 'Title should include at list 5 characters.' });
+        }
+
+        if (!validator.isLength(content, { min: 5 })) {
+            errors.push({ message: 'Content should include at list 5 characters.' });
+        }
+
+        if (errors.length > 0) {
+            const error = new Error('New Post Validation failed. Entered data is incorrect.');
+            error.code = 422;
+            error.data = errors;
+            throw error;
+        }
+
+        try {
+            const post = await Post.findById(postId).populate('creator');
+            if (!post) {
+                const error = new Error('Post with such an Id doe not esists.');
+                error.statusCode = 404;
+                throw error;
+            }
+
+            if (post.creator._id.toString() !== context.req.userId.toString()) {
+                const error = new Error('Not authorized.');
+                error.statusCode = 403;
+                throw error;
+            }
+
+            // input PostInputData {
+            //     title: String!
+            //     content: String!
+            //     imageUrl: String!
+            // }
+
+            console.log('updatePosts', 'title', title, 'imageUrl', postInput.imageUrl);
+
+            post.title = title;
+            post.content = content;
+            if (postInput.imageUrl !== 'undefined' && post.imageUrl !== postInput.imageUrl) {
+                clearImage(post.imageUrl)
+                post.imageUrl = postInput.imageUrl;
+            }
+            await post.save();
+
+            return {
+                ...post._doc,
+                _id: post._id.toString(),
+                createdAt: post.createdAt.toISOString(),
+                updatedAt: post.updatedAt.toISOString(),
+            }
+        } catch (err) {
+            console.log('updatePosts', 'ERROR: ' + err);
+
+            if (!err.code) {
+                err.code = 500;
+            }
+            //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
+            throw err;
+        }
+
+    },
     deletePost: async function ({ postId }, context) {
         if (!context.req.isAuth) {
             const error = new Error('Not authenticated!');
@@ -263,7 +337,7 @@ module.exports = {
                 deletedPost: post._id.toString()
             };
         } catch (err) {
-            console.log('getPosts', 'ERROR: ' + err);
+            console.log('deletePosts', 'ERROR: ' + err);
 
             if (!err.code) {
                 err.code = 500;
