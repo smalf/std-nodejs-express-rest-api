@@ -150,7 +150,7 @@ module.exports = {
                 ...createdPost._doc,
                 _id: createdPost._id.toString(),
                 createdAt: createdPost.createdAt.toISOString(),
-                updatedAt: createdPost.createdAt.toISOString(),
+                updatedAt: createdPost.updatedAt.toISOString(),
             }
         } catch (err) {
             console.log('createPost', 'ERROR: ' + err);
@@ -179,7 +179,7 @@ module.exports = {
                         ...post._doc,
                         _id: post._id.toString(),
                         createdAt: post.createdAt.toISOString(),
-                        updatedAt: post.createdAt.toISOString(),
+                        updatedAt: post.updatedAt.toISOString(),
                     };
                 })
             };
@@ -194,5 +194,40 @@ module.exports = {
             //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
             throw err;
         }
+    },
+    getPost: async function ({ postId }, context) {
+        if (!context.req.isAuth) {
+            const error = new Error('Not authenticated!');
+            error.code = 401;
+            throw error;
+        }
+
+        try {
+
+            const post = await Post.findById(postId).populate('creator');
+
+            if (!post) {
+                const error = new Error('Post with such an Id doe not esists.');
+                error.statusCode = 404;
+                throw error;
+            }
+
+            return {
+                ...post._doc,
+                _id: post._id.toString(),
+                createdAt: post.createdAt.toISOString(),
+                updatedAt: post.updatedAt.toISOString(),
+            }
+
+        } catch (err) {
+            console.log('getPosts', 'ERROR: ' + err);
+
+            if (!err.code) {
+                err.code = 500;
+            }
+            //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
+            throw err;
+        }
+
     }
 };
