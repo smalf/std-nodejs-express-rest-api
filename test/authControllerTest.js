@@ -58,13 +58,7 @@ describe('Auth Controller - Login', function () {
         userStub.restore();
     });
 
-    it('should send a responce with valid user status for an existing user', function (done) {
-        // const next = sinon.spy();
-
-        console.log('1) console.log visible');
-        console.error('2) console.error visible');
-        process.stdout.write('3) stdout.write visible\n');
-
+    it('should send a responce with valid user status for an existing user', async function () {
         const req = {
             userId: testUserId
         };
@@ -82,33 +76,9 @@ describe('Auth Controller - Login', function () {
             }
         };
 
-        try {
-            accController
-                .getStatus(req, res, (err) => { })
-                .then(() => {
-                    console.log('accController', 'getStatus', 'start assertion');
-
-                    try {
-                        assert.equal(res.statusCode, 200);
-                        assert.equal(res.userStatus, 'I am New!');
-                        done();
-                    } catch (err) {
-                        done(err);
-                    }
-                    
-                    // 
-                })
-                .catch(err => {
-                    assert.equal(err.statusCode, 200);
-                    done();
-                });
-        } catch (err) {
-            console.log('1) console.log visible: ', err);
-            console.error('2) console.error visible', err);
-            process.stdout.write('3) stdout.write visible', err);
-
-
-        }
+        await accController.getStatus(req, res, () => { });
+        assert.equal(res.statusCode, 200);
+        assert.equal(res.userStatus, 'I am New!');
     });
 
     after(function (done) {
