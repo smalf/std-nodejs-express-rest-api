@@ -6,11 +6,13 @@ exports.getStatus = async (req, res, next) => {
 
     try {
         const user = await User.findById(userId);
+
         if (!user) {
             const error = new Error('Not authorized.');
             error.statusCode = 403;
             throw error;
         }
+
         res.status(200).json({
             message: 'Status succesfully retrieved.',
             status: user.status
@@ -22,7 +24,8 @@ exports.getStatus = async (req, res, next) => {
             err.statusCode = 500;
         }
         //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
-        next(err);
+        throw err;
+        // next(err);
     }
 
 }
