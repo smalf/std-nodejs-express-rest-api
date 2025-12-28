@@ -1,5 +1,7 @@
 const assert = require('chai').assert;
-const isAuth = require('../middleware/is-auth');
+const sinon = require('sinon');
+const jwt = require('jsonwebtoken');
+
 const authMiddlleware = require('../middleware/is-auth');
 
 describe('Auth Middleware Tests', function () {
@@ -35,4 +37,26 @@ describe('Auth Middleware Tests', function () {
         // assert.throws(authMiddlleware.bind(this, req, {}, () => { }), TypeError);
     });
 
+    it('should yield a userId if JWT token can be verified.', function() {
+        const req = {
+            get: function (header) {
+                return "Bearer xasdfasdfyzasdfasdfAasdfkjh";
+            }
+        };
+
+        //Manually overrides external dependency!
+        const jwtStub = sinon.stub(jwt, 'verify').returns({
+            userId: 'abc'
+        });
+        
+        authMiddlleware(req, {}, () => { });
+
+
+        assert.isTrue(jwtStub.calledOnce);
+        assert.property(req, 'userId');
+        assert.equal(req.userId, 'abc');
+
+        jwtStub.restore();
+        // jwt.verify.restore();
+    });
 });

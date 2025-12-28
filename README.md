@@ -17,7 +17,7 @@ Required:
 2. **Asserting Results** => Validating the test outcome Framework: Chai
 3. **Managing Side Effect/External Dependencies Framework**: Sinon (Mocking)
 ### Testing Setup
-**Step 1**. Install [Mocha](https://mochajs.org/next/getting-started/) and [Chai](https://www.chaijs.com/) ```npm install --save-dev mocha chai```
+**Step 1**. Install [Mocha](https://mochajs.org/next/getting-started/), [Chai](https://www.chaijs.com/), and [Sinon](https://sinonjs.org/) ```npm install --save-dev mocha chai sinon```
 **Step 2**. Modify ```npm test```. Steps:
 1. Open [package.json](./package.json).
 2. Modify the **scripts/test** section in the following way: ```"test": "mocha"```.
