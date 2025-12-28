@@ -10,14 +10,14 @@ module.exports.login = async (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
 
-    const loggedUser = await User.findOne({ email: email });
-    if (!loggedUser) {
-        const error = new Error('User with such an email doesn\'t exists.');
-        error.statusCode = 401;
-        throw error;
-    }
-
     try {
+        const loggedUser = await User.findOne({ email: email });
+        if (!loggedUser) {
+            const error = new Error('User with such an email doesn\'t exists.');
+            error.statusCode = 401;
+            throw error;
+        }
+
         const doMatch = await bcript.compare(password, loggedUser.password);
         if (!doMatch) {
             const error = new Error('Wrong password or email!');
@@ -36,6 +36,7 @@ module.exports.login = async (req, res, next) => {
             token: token,
             userId: loggedUser._id
         })
+        return;
     } catch (err) {
         console.log('authController', 'login', 'ERROR: ' + err);
 
@@ -44,6 +45,7 @@ module.exports.login = async (req, res, next) => {
         }
         //next will redirect an error to the top level promise. In our case it will be the root one in the app.js.
         next(err);
+        return err;
     }
 }
 
