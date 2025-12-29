@@ -2,37 +2,28 @@ require('dotenv').config();
 
 const assert = require('chai').assert;
 const sinon = require('sinon');
-const { expect } = require('chai');
-const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 
 const authController = require('../controllers/authController');
 const accController = require('../controllers/accController');
 const User = require('../models/user');
-const { default: isEmail } = require('validator/lib/isEmail');
 
 const { MONGODB_URI } = process.env;
 
 const testUserId = '69517500970beb407993d2b5';
 
 describe('Auth Controller - Login', function () {
-    before(function (done) {
+    before(async function () {
         //Connect to the DB.
-        mongoose.connect(MONGODB_URI)
-            .then(result => {
-                const user = new User({
-                    name: "Test",
-                    email: "test@test.com",
-                    password: "tester",
-                    posts: [],
-                    _id: testUserId
-                });
-
-                return user.save();
-            })
-            .then(() => {
-                done();
-            })
+        await mongoose.connect(MONGODB_URI);
+        const user = new User({
+            name: "Test",
+            email: "test@test.com",
+            password: "tester",
+            posts: [],
+            _id: testUserId
+        });
+        await user.save();
     });
 
     //done - is a parameter that allows to test the aync code.
@@ -81,13 +72,8 @@ describe('Auth Controller - Login', function () {
         assert.equal(res.userStatus, 'I am New!');
     });
 
-    after(function (done) {
-        User.deleteMany({})
-            .then(() => {
-                mongoose.disconnect();
-            })
-            .then(() => {
-                done();
-            });
+    after(async function () {
+        await User.deleteMany({});
+        await mongoose.disconnect();
     });
 });
